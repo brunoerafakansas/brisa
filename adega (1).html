@@ -1,0 +1,1197 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Minha Adega</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --wine: #6B1A2A;
+    --wine-light: #8B2A3F;
+    --wine-dark: #4A0F1C;
+    --gold: #C9A84C;
+    --gold-light: #E8C97A;
+    --cream: #FAF6F0;
+    --cream-dark: #F0E8DC;
+    --text: #1A0A0F;
+    --text-muted: #6B5560;
+    --text-light: #9C8890;
+    --surface: #FFFFFF;
+    --border: rgba(107,26,42,0.12);
+    --border-strong: rgba(107,26,42,0.25);
+    --radius: 10px;
+    --radius-lg: 16px;
+    --shadow: 0 2px 12px rgba(107,26,42,0.08);
+    --shadow-lg: 0 8px 32px rgba(107,26,42,0.12);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--wine-dark);
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.3);
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+  }
+
+  .logo-icon {
+    width: 36px;
+    height: 36px;
+    background: var(--gold);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+  }
+
+  .logo-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    font-weight: 600;
+    color: #fff;
+    letter-spacing: 0.02em;
+  }
+
+  .logo-name span {
+    color: var(--gold-light);
+  }
+
+  nav {
+    display: flex;
+    gap: 4px;
+  }
+
+  .nav-btn {
+    padding: 7px 16px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    color: rgba(255,255,255,0.65);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .nav-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+  .nav-btn.active { background: rgba(201,168,76,0.2); color: var(--gold-light); font-weight: 500; }
+
+  .add-btn {
+    padding: 8px 18px;
+    border-radius: 6px;
+    border: 1px solid var(--gold);
+    background: transparent;
+    color: var(--gold-light);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-left: 8px;
+  }
+
+  .add-btn:hover { background: var(--gold); color: var(--wine-dark); }
+
+  /* ── MAIN ── */
+  main { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+  /* ── VIEWS ── */
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* ── STATS ── */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0,1fr));
+    gap: 12px;
+    margin-bottom: 2rem;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem 1.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--wine);
+  }
+
+  .stat-card.gold::before { background: var(--gold); }
+  .stat-card.green::before { background: #2D6A4F; }
+  .stat-card.blue::before { background: #1D5C8B; }
+
+  .stat-label {
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+
+  .stat-value {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1;
+  }
+
+  .stat-sub {
+    font-size: 11px;
+    color: var(--text-light);
+    margin-top: 4px;
+  }
+
+  /* ── CHARTS ROW ── */
+  .charts-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 2rem;
+  }
+
+  .chart-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem 1.5rem;
+  }
+
+  .chart-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 1rem;
+  }
+
+  .chart-wrap { height: 180px; }
+
+  /* ── TOOLBAR ── */
+  .toolbar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 1.25rem;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .search-wrap {
+    position: relative;
+    flex: 1;
+    min-width: 200px;
+  }
+
+  .search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-light);
+    font-size: 14px;
+    pointer-events: none;
+  }
+
+  .search-input {
+    width: 100%;
+    padding: 9px 12px 9px 34px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    background: var(--surface);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .search-input:focus { border-color: var(--wine); }
+  .search-input::placeholder { color: var(--text-light); }
+
+  select {
+    padding: 9px 12px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    background: var(--surface);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    color: var(--text);
+    outline: none;
+    cursor: pointer;
+  }
+
+  select:focus { border-color: var(--wine); }
+
+  .page-info {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-left: auto;
+  }
+
+  /* ── TABLE ── */
+  .table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  thead {
+    background: var(--wine-dark);
+  }
+
+  th {
+    padding: 11px 14px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: rgba(255,255,255,0.7);
+    white-space: nowrap;
+    user-select: none;
+    cursor: pointer;
+  }
+
+  th:hover { color: var(--gold-light); }
+  th.sorted { color: var(--gold-light); }
+
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+  }
+
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--cream); }
+
+  td {
+    padding: 11px 14px;
+    color: var(--text);
+    vertical-align: middle;
+  }
+
+  .wine-name-cell {
+    font-weight: 500;
+    color: var(--text);
+    max-width: 180px;
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .badge-tinto { background: #FDECEA; color: #8B1A1A; border: 1px solid #F5B8B8; }
+  .badge-branco { background: #F5F7E8; color: #4A5A0A; border: 1px solid #D4DC90; }
+  .badge-rose { background: #FDE8F0; color: #8B1A4A; border: 1px solid #F5B8D0; }
+  .badge-espumante { background: #E8F0FD; color: #1A3A8B; border: 1px solid #B8C8F5; }
+  .badge-outro { background: #F0EBF5; color: #4A1A6B; border: 1px solid #C8B0DC; }
+
+  .stars {
+    color: var(--gold);
+    font-size: 12px;
+    letter-spacing: -1px;
+  }
+
+  .stars-num {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-left: 4px;
+  }
+
+  .qty-cell { font-weight: 500; }
+  .qty-low { color: #B45309; }
+  .qty-zero { color: #B91C1C; }
+  .qty-ok { color: #15803D; }
+
+  /* ── ACTION BUTTONS ── */
+  .actions { display: flex; gap: 5px; }
+
+  .act-btn {
+    padding: 4px 10px;
+    border-radius: 5px;
+    border: 1px solid;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.12s;
+    white-space: nowrap;
+  }
+
+  .act-edit { border-color: #1D5C8B; color: #1D5C8B; background: transparent; }
+  .act-edit:hover { background: #1D5C8B; color: #fff; }
+
+  .act-del { border-color: #B91C1C; color: #B91C1C; background: transparent; }
+  .act-del:hover { background: #B91C1C; color: #fff; }
+
+  .act-drink { border-color: #15803D; color: #15803D; background: transparent; }
+  .act-drink:hover { background: #15803D; color: #fff; }
+
+  /* ── PAGINATION ── */
+  .pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 1.25rem;
+  }
+
+  .pg-btn {
+    padding: 6px 12px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border-strong);
+    background: var(--surface);
+    color: var(--text-muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+
+  .pg-btn:hover:not(:disabled) { border-color: var(--wine); color: var(--wine); }
+  .pg-btn.active { background: var(--wine); border-color: var(--wine); color: #fff; }
+  .pg-btn:disabled { opacity: 0.35; cursor: default; }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(26,10,15,0.55);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    padding: 2rem;
+    width: 520px;
+    max-width: 95vw;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: var(--shadow-lg);
+  }
+
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+  }
+
+  .modal-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--wine-dark);
+  }
+
+  .modal-close {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    border: 1px solid var(--border-strong);
+    background: transparent;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .modal-close:hover { background: var(--cream-dark); }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-group.full { grid-column: 1/-1; }
+
+  label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .form-input {
+    padding: 9px 12px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.15s;
+    background: var(--cream);
+  }
+
+  .form-input:focus { border-color: var(--wine); background: var(--surface); }
+
+  .modal-footer {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 1.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .btn-cancel {
+    padding: 9px 20px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border-strong);
+    background: transparent;
+    color: var(--text-muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  .btn-save {
+    padding: 9px 24px;
+    border-radius: var(--radius);
+    border: none;
+    background: var(--wine);
+    color: #fff;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .btn-save:hover { background: var(--wine-light); }
+
+  /* ── SETUP BANNER ── */
+  .setup-banner {
+    background: linear-gradient(135deg, var(--wine-dark), var(--wine));
+    border-radius: var(--radius-lg);
+    padding: 1.5rem 2rem;
+    margin-bottom: 2rem;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .setup-text h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  .setup-text p { font-size: 13px; opacity: 0.8; }
+
+  .setup-input-row {
+    display: flex;
+    gap: 8px;
+    flex: 1;
+    max-width: 480px;
+  }
+
+  .setup-input {
+    flex: 1;
+    padding: 9px 12px;
+    border-radius: var(--radius);
+    border: 1px solid rgba(255,255,255,0.3);
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    outline: none;
+  }
+
+  .setup-input::placeholder { color: rgba(255,255,255,0.5); }
+  .setup-input:focus { border-color: var(--gold-light); }
+
+  .setup-btn {
+    padding: 9px 18px;
+    border-radius: var(--radius);
+    border: 1px solid var(--gold);
+    background: var(--gold);
+    color: var(--wine-dark);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s;
+  }
+
+  .setup-btn:hover { background: var(--gold-light); }
+
+  /* ── LOADING / EMPTY ── */
+  .loading-msg, .empty-msg {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-muted);
+    font-size: 14px;
+  }
+
+  .empty-icon { font-size: 40px; margin-bottom: 12px; }
+
+  /* ── SECTION TITLE ── */
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--wine-dark);
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .section-title .count {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--text-muted);
+    background: var(--cream-dark);
+    padding: 2px 10px;
+    border-radius: 20px;
+  }
+
+  /* ── TOMADOS TAB ── */
+  #view-tomados table td, #view-tomados table th { opacity: 0.85; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 700px) {
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+    .charts-row { grid-template-columns: 1fr; }
+    header { padding: 0 1rem; }
+    .logo-name { font-size: 16px; }
+    nav { display: none; }
+    main { padding: 1rem; }
+    .form-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">🍷</div>
+    <div class="logo-name">Minha <span>Adega</span></div>
+  </div>
+  <nav>
+    <button class="nav-btn active" onclick="switchView('adega')">Adega</button>
+    <button class="nav-btn" onclick="switchView('tomados')">Vinhos Tomados</button>
+  </nav>
+  <button class="add-btn" onclick="openModal()">+ Adicionar vinho</button>
+</header>
+
+<main>
+  <!-- SETUP BANNER -->
+  <div class="setup-banner" id="setup-banner">
+    <div class="setup-text">
+      <h3>Conecte sua planilha do Google Sheets</h3>
+      <p>Cole o ID da planilha abaixo. Ela precisa estar pública (Compartilhar → Qualquer pessoa com o link).</p>
+    </div>
+    <div class="setup-input-row">
+      <input class="setup-input" id="sheet-id-input" placeholder="ID da planilha (ex: 1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms)" />
+      <button class="setup-btn" onclick="connectSheet()">Conectar</button>
+    </div>
+  </div>
+
+  <!-- ADEGA VIEW -->
+  <div class="view active" id="view-adega">
+    <div class="stats-grid" id="stats-grid">
+      <div class="stat-card"><div class="stat-label">Vinhos diferentes</div><div class="stat-value" id="st-total">–</div><div class="stat-sub">rótulos na adega</div></div>
+      <div class="stat-card gold"><div class="stat-label">Total de garrafas</div><div class="stat-value" id="st-garrafas">–</div><div class="stat-sub">em estoque</div></div>
+      <div class="stat-card green"><div class="stat-label">Países únicos</div><div class="stat-value" id="st-paises">–</div><div class="stat-sub">regiões representadas</div></div>
+      <div class="stat-card blue"><div class="stat-label">Avaliação média</div><div class="stat-value" id="st-avg">–</div><div class="stat-sub">de 5.0</div></div>
+    </div>
+
+    <div class="charts-row">
+      <div class="chart-card">
+        <div class="chart-title">Garrafas por País</div>
+        <div class="chart-wrap"><canvas id="chart-pais"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Garrafas por Safra</div>
+        <div class="chart-wrap"><canvas id="chart-safra"></canvas></div>
+      </div>
+    </div>
+
+    <div class="section-title">
+      Minha Adega
+      <span class="count" id="adega-count">0 vinhos</span>
+    </div>
+
+    <div class="toolbar">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input class="search-input" id="search-adega" placeholder="Buscar por nome, país, uva..." oninput="renderTable()" />
+      </div>
+      <select id="filter-tipo" onchange="renderTable()">
+        <option value="">Todos os tipos</option>
+        <option>Tinto</option><option>Branco</option><option>Rosé</option><option>Espumante</option>
+      </select>
+      <select id="filter-pais" onchange="renderTable()">
+        <option value="">Todos os países</option>
+      </select>
+      <select id="per-page" onchange="renderTable()">
+        <option value="10">10 por página</option>
+        <option value="25">25 por página</option>
+        <option value="50">50 por página</option>
+        <option value="9999">Todos</option>
+      </select>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th onclick="sortBy('Nome')">Nome</th>
+            <th onclick="sortBy('Safra')">Safra</th>
+            <th onclick="sortBy('Qtd')">Qtd</th>
+            <th onclick="sortBy('Avaliacao')">Avaliação</th>
+            <th>Intervalo</th>
+            <th onclick="sortBy('AnoIdeal')">Ano Ideal</th>
+            <th onclick="sortBy('Pais')">País</th>
+            <th onclick="sortBy('Tipo')">Tipo</th>
+            <th>Ação</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-adega"></tbody>
+      </table>
+    </div>
+
+    <div class="pagination" id="pagination-adega"></div>
+  </div>
+
+  <!-- TOMADOS VIEW -->
+  <div class="view" id="view-tomados">
+    <div class="section-title">
+      Vinhos Tomados
+      <span class="count" id="tomados-count">0 vinhos</span>
+    </div>
+
+    <div class="toolbar">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input class="search-input" id="search-tomados" placeholder="Buscar..." oninput="renderTomados()" />
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>Safra</th>
+            <th>Avaliação</th>
+            <th>Intervalo</th>
+            <th>Ano Ideal</th>
+            <th>País</th>
+            <th>Tipo</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-tomados"></tbody>
+      </table>
+    </div>
+
+    <div class="pagination" id="pagination-tomados"></div>
+  </div>
+</main>
+
+<!-- MODAL ADICIONAR/EDITAR -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">Adicionar vinho</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="form-grid">
+      <div class="form-group full">
+        <label>Nome do vinho</label>
+        <input class="form-input" id="f-nome" placeholder="ex: Achaval Ferrer Malbec" />
+      </div>
+      <div class="form-group">
+        <label>Safra</label>
+        <input class="form-input" id="f-safra" placeholder="ex: 2021" />
+      </div>
+      <div class="form-group">
+        <label>Quantidade</label>
+        <input class="form-input" id="f-qtd" type="number" min="0" placeholder="0" />
+      </div>
+      <div class="form-group">
+        <label>Avaliação (0–5)</label>
+        <input class="form-input" id="f-aval" type="number" step="0.1" min="0" max="5" placeholder="4.0" />
+      </div>
+      <div class="form-group">
+        <label>País</label>
+        <input class="form-input" id="f-pais" placeholder="ex: Argentina" />
+      </div>
+      <div class="form-group">
+        <label>Tipo</label>
+        <select class="form-input" id="f-tipo">
+          <option>Tinto</option><option>Branco</option><option>Rosé</option><option>Espumante</option><option>Outro</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Início consumo ideal</label>
+        <input class="form-input" id="f-ini" placeholder="ex: 2024" />
+      </div>
+      <div class="form-group">
+        <label>Fim consumo ideal</label>
+        <input class="form-input" id="f-fim" placeholder="ex: 2030" />
+      </div>
+      <div class="form-group full">
+        <label>Ano ideal</label>
+        <input class="form-input" id="f-anoideal" placeholder="ex: 2027" />
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="btn-save" onclick="saveWine()">Salvar vinho</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── STATE ──
+let wines = [];
+let tomados = [];
+let currentPage = 1;
+let currentPageT = 1;
+let sortCol = 'Nome';
+let sortAsc = true;
+let editIndex = null;
+let sheetId = '';
+
+const SHEET_NAME_ADEGA = 'Sheet1';
+const SHEET_NAME_TOMADOS = 'tomados';
+
+// ── SHEET CONNECTION ──
+function connectSheet() {
+  const val = document.getElementById('sheet-id-input').value.trim();
+  if (!val) return;
+  // Extract ID if full URL pasted
+  const match = val.match(/\/d\/([a-zA-Z0-9_-]+)/);
+  sheetId = match ? match[1] : val;
+  localStorage.setItem('adega_sheet_id', sheetId);
+  loadFromSheet();
+}
+
+function loadFromSheet() {
+  if (!sheetId) return;
+  document.getElementById('setup-banner').style.display = 'none';
+
+  fetchSheet(SHEET_NAME_ADEGA).then(rows => {
+    wines = rows.filter(w => w.Nome); // remove linhas vazias
+    updateStats();
+    updateCharts();
+    updateFilters();
+    renderTable();
+  }).catch(() => {
+    document.getElementById('tbody-adega').innerHTML = `<tr><td colspan="9"><div class="empty-msg"><div class="empty-icon">⚠️</div>Não foi possível carregar a planilha. Verifique se ela está pública.</div></td></tr>`;
+  });
+
+  fetchSheet(SHEET_NAME_TOMADOS).then(rows => {
+    tomados = rows.filter(w => w.Nome);
+    renderTomados();
+  }).catch(() => {});
+}
+
+async function fetchSheet(tabName) {
+  const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(tabName)}`;
+  try {
+    const res = await fetch(url);
+    const text = await res.text();
+    const json = JSON.parse(text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/)[1]);
+    const cols = json.table.cols.map(c => c.label);
+    return (json.table.rows || []).map(row => {
+      const obj = {};
+      cols.forEach((col, i) => {
+        obj[col] = row.c[i] ? (row.c[i].v !== null ? row.c[i].v : '') : '';
+      });
+      // Normalize column names to internal keys
+      return {
+        Nome: obj['Nome'] ?? '',
+        Safra: obj['Safra'] ?? '',
+        Qtd: obj['Qtd'] ?? obj['Quantidade'] ?? 0,
+        Avaliacao: obj['Avaliação'] ?? obj['Avaliacao'] ?? '',
+        Intervalo: obj['Intervalo Ideal de Consumo'] ?? obj['Intervalo'] ?? '',
+        AnoIdeal: obj['Ano Ideal'] ?? obj['AnoIdeal'] ?? '',
+        Pais: obj['País'] ?? obj['Pais'] ?? '',
+        Tipo: obj['Tipo'] ?? '',
+      };
+    });
+  } catch (e) {
+    console.error('Erro ao buscar aba:', tabName, e);
+    return [];
+  }
+}
+
+// ── FALLBACK DEMO DATA (quando não há planilha conectada) ──
+function loadDemoData() {
+  wines = [
+    { Nome: '3S Sottano Malbec', Safra: 2020, Qtd: 1, Avaliacao: 4.3, Intervalo: '2023–2028', AnoIdeal: 2025, Pais: 'Argentina', Tipo: 'Tinto' },
+    { Nome: 'Adrianna DV Catena Malbec', Safra: 2022, Qtd: 4, Avaliacao: 4.4, Intervalo: '2025-2030', AnoIdeal: 2026, Pais: 'Argentina', Tipo: 'Tinto' },
+    { Nome: 'Alamos Cabernet Sauvignon', Safra: 2022, Qtd: 1, Avaliacao: 3.5, Intervalo: '2023–2026', AnoIdeal: 2024, Pais: 'Argentina', Tipo: 'Tinto' },
+    { Nome: 'Alamos Malbec', Safra: 2022, Qtd: 1, Avaliacao: 3.7, Intervalo: '2023–2026', AnoIdeal: 2024, Pais: 'Argentina', Tipo: 'Tinto' },
+    { Nome: 'Alfredo Roca Fincas Pinot Noir', Safra: 2023, Qtd: 1, Avaliacao: 3.7, Intervalo: '2024-2026', AnoIdeal: 2025, Pais: 'Argentina', Tipo: 'Tinto' },
+    { Nome: 'Aliwen Merlot Reserva', Safra: 2022, Qtd: 1, Avaliacao: 3.9, Intervalo: '2023–2026', AnoIdeal: 2024, Pais: 'Chile', Tipo: 'Tinto' },
+    { Nome: 'Chateau Pichon Baron', Safra: 2018, Qtd: 2, Avaliacao: 4.8, Intervalo: '2026–2040', AnoIdeal: 2032, Pais: 'França', Tipo: 'Tinto' },
+    { Nome: 'Barolo Brunate', Safra: 2019, Qtd: 3, Avaliacao: 4.6, Intervalo: '2025–2038', AnoIdeal: 2030, Pais: 'Itália', Tipo: 'Tinto' },
+    { Nome: 'Riesling Spätlese', Safra: 2021, Qtd: 6, Avaliacao: 4.2, Intervalo: '2023–2030', AnoIdeal: 2026, Pais: 'Alemanha', Tipo: 'Branco' },
+    { Nome: 'Gran Cru Espumante', Safra: 2020, Qtd: 4, Avaliacao: 4.1, Intervalo: '2022–2027', AnoIdeal: 2024, Pais: 'Brasil', Tipo: 'Espumante' },
+    { Nome: 'Douro Reserva Tinto', Safra: 2020, Qtd: 5, Avaliacao: 4.0, Intervalo: '2023–2028', AnoIdeal: 2025, Pais: 'Portugal', Tipo: 'Tinto' },
+    { Nome: 'Garganega Soave Classico', Safra: 2022, Qtd: 2, Avaliacao: 3.8, Intervalo: '2023–2026', AnoIdeal: 2024, Pais: 'Itália', Tipo: 'Branco' },
+  ];
+  tomados = [
+    { Nome: 'Casillero del Diablo Reserva', Safra: 2020, Avaliacao: 3.5, Intervalo: '2021–2024', AnoIdeal: 2022, Pais: 'Chile', Tipo: 'Tinto' },
+    { Nome: 'Santa Carolina Malbec', Safra: 2021, Avaliacao: 3.8, Intervalo: '2022–2025', AnoIdeal: 2023, Pais: 'Chile', Tipo: 'Tinto' },
+  ];
+  updateStats(); updateCharts(); updateFilters(); renderTable(); renderTomados();
+}
+
+// ── STATS ──
+function updateStats() {
+  const total = wines.length;
+  const garrafas = wines.reduce((s, w) => s + (parseFloat(w.Qtd) || 0), 0);
+  const paises = new Set(wines.map(w => w.Pais).filter(Boolean)).size;
+  const avals = wines.map(w => parseFloat(w.Avaliacao)).filter(n => !isNaN(n));
+  const avg = avals.length ? (avals.reduce((a,b) => a+b, 0) / avals.length).toFixed(1) : '–';
+
+  document.getElementById('st-total').textContent = total;
+  document.getElementById('st-garrafas').textContent = garrafas;
+  document.getElementById('st-paises').textContent = paises;
+  document.getElementById('st-avg').textContent = avg;
+}
+
+// ── CHARTS ──
+let chartPais = null, chartSafra = null;
+
+function updateCharts() {
+  // Country chart
+  const paisCount = {};
+  wines.forEach(w => {
+    const p = w.Pais || 'Outros';
+    paisCount[p] = (paisCount[p] || 0) + (parseFloat(w.Qtd) || 0);
+  });
+  const paisLabels = Object.keys(paisCount).sort((a,b) => paisCount[b]-paisCount[a]);
+  const paisVals = paisLabels.map(p => paisCount[p]);
+
+  if (chartPais) chartPais.destroy();
+  chartPais = new Chart(document.getElementById('chart-pais'), {
+    type: 'bar',
+    data: {
+      labels: paisLabels,
+      datasets: [{ data: paisVals, backgroundColor: '#6B1A2A', borderRadius: 5 }]
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { font: { size: 11 }, color: '#6B5560' }, grid: { display: false } },
+        y: { ticks: { font: { size: 11 }, color: '#6B5560' }, grid: { color: 'rgba(107,26,42,0.06)' } }
+      },
+      responsive: true, maintainAspectRatio: false
+    }
+  });
+
+  // Vintage chart
+  const safraCount = {};
+  wines.forEach(w => {
+    const s = String(w.Safra || 'NV');
+    safraCount[s] = (safraCount[s] || 0) + (parseFloat(w.Qtd) || 0);
+  });
+  const safraLabels = Object.keys(safraCount).sort();
+  const safraVals = safraLabels.map(s => safraCount[s]);
+
+  if (chartSafra) chartSafra.destroy();
+  chartSafra = new Chart(document.getElementById('chart-safra'), {
+    type: 'bar',
+    data: {
+      labels: safraLabels,
+      datasets: [{ data: safraVals, backgroundColor: '#C9A84C', borderRadius: 5 }]
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { font: { size: 11 }, color: '#6B5560' }, grid: { display: false } },
+        y: { ticks: { font: { size: 11 }, color: '#6B5560' }, grid: { color: 'rgba(107,26,42,0.06)' } }
+      },
+      responsive: true, maintainAspectRatio: false
+    }
+  });
+}
+
+// ── FILTERS ──
+function updateFilters() {
+  const paises = [...new Set(wines.map(w => w.Pais).filter(Boolean))].sort();
+  const sel = document.getElementById('filter-pais');
+  sel.innerHTML = '<option value="">Todos os países</option>';
+  paises.forEach(p => { const o = document.createElement('option'); o.value = p; o.textContent = p; sel.appendChild(o); });
+}
+
+// ── TABLE RENDER ──
+function getFiltered() {
+  const q = document.getElementById('search-adega').value.toLowerCase();
+  const tipo = document.getElementById('filter-tipo').value;
+  const pais = document.getElementById('filter-pais').value;
+
+  return wines.filter(w => {
+    const name = String(w.Nome || '').toLowerCase();
+    const country = String(w.Pais || '').toLowerCase();
+    const match = !q || name.includes(q) || country.includes(q);
+    const matchTipo = !tipo || w.Tipo === tipo;
+    const matchPais = !pais || w.Pais === pais;
+    return match && matchTipo && matchPais;
+  }).sort((a, b) => {
+    let va = a[sortCol] ?? '', vb = b[sortCol] ?? '';
+    if (!isNaN(va) && !isNaN(vb)) { va = parseFloat(va); vb = parseFloat(vb); }
+    else { va = String(va).toLowerCase(); vb = String(vb).toLowerCase(); }
+    if (va < vb) return sortAsc ? -1 : 1;
+    if (va > vb) return sortAsc ? 1 : -1;
+    return 0;
+  });
+}
+
+function renderTable() {
+  const filtered = getFiltered();
+  const pp = parseInt(document.getElementById('per-page').value);
+  const totalPages = Math.ceil(filtered.length / pp);
+  if (currentPage > totalPages) currentPage = 1;
+
+  const slice = filtered.slice((currentPage-1)*pp, currentPage*pp);
+  const tbody = document.getElementById('tbody-adega');
+  document.getElementById('adega-count').textContent = `${filtered.length} vinho${filtered.length !== 1 ? 's' : ''}`;
+
+  if (!slice.length) {
+    tbody.innerHTML = `<tr><td colspan="9"><div class="empty-msg"><div class="empty-icon">🍾</div>Nenhum vinho encontrado.</div></td></tr>`;
+    document.getElementById('pagination-adega').innerHTML = '';
+    return;
+  }
+
+  tbody.innerHTML = slice.map((w, i) => {
+    const realIdx = wines.indexOf(w);
+    const qty = parseFloat(w.Qtd) || 0;
+    const qtyClass = qty === 0 ? 'qty-zero' : qty <= 2 ? 'qty-low' : 'qty-ok';
+    const tipo = String(w.Tipo || '').toLowerCase().replace('é','e').replace('ã','a');
+    const stars = renderStars(w.Avaliacao);
+    return `<tr>
+      <td class="wine-name-cell">${esc(w.Nome)}</td>
+      <td>${esc(w.Safra)}</td>
+      <td class="qty-cell ${qtyClass}">${qty}</td>
+      <td>${stars}</td>
+      <td>${esc(w.Intervalo)}</td>
+      <td>${esc(w.AnoIdeal)}</td>
+      <td>${esc(w.Pais)}</td>
+      <td><span class="badge badge-${tipo}">${esc(w.Tipo)}</span></td>
+      <td><div class="actions">
+        <button class="act-btn act-edit" onclick="editWine(${realIdx})">Editar</button>
+        <button class="act-btn act-del" onclick="deleteWine(${realIdx})">Excluir</button>
+        <button class="act-btn act-drink" onclick="markDrunk(${realIdx})">Tomado</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+
+  renderPagination('pagination-adega', currentPage, totalPages, p => { currentPage = p; renderTable(); });
+}
+
+function renderStars(val) {
+  const n = parseFloat(val);
+  if (isNaN(n)) return `<span style="color:var(--text-light);font-size:12px;">–</span>`;
+  const full = Math.floor(n);
+  const half = n - full >= 0.5 ? 1 : 0;
+  const empty = 5 - full - half;
+  return `<span class="stars">${'★'.repeat(full)}${'½'.repeat(half)}${'☆'.repeat(empty)}</span><span class="stars-num">${n.toFixed(1)}</span>`;
+}
+
+// ── TOMADOS RENDER ──
+function renderTomados() {
+  const q = document.getElementById('search-tomados').value.toLowerCase();
+  const pp = 10;
+  const filtered = tomados.filter(w => !q || String(w.Nome || '').toLowerCase().includes(q));
+  const totalPages = Math.ceil(filtered.length / pp);
+  if (currentPageT > totalPages) currentPageT = 1;
+  const slice = filtered.slice((currentPageT-1)*pp, currentPageT*pp);
+  const tbody = document.getElementById('tbody-tomados');
+  document.getElementById('tomados-count').textContent = `${filtered.length} vinho${filtered.length !== 1 ? 's' : ''}`;
+
+  if (!slice.length) {
+    tbody.innerHTML = `<tr><td colspan="7"><div class="empty-msg"><div class="empty-icon">🥂</div>Nenhum vinho tomado ainda.</div></td></tr>`;
+    document.getElementById('pagination-tomados').innerHTML = '';
+    return;
+  }
+
+  tbody.innerHTML = slice.map(w => {
+    const tipo = String(w.Tipo || '').toLowerCase().replace('é','e').replace('ã','a');
+    return `<tr>
+      <td class="wine-name-cell">${esc(w.Nome)}</td>
+      <td>${esc(w.Safra)}</td>
+      <td>${renderStars(w.Avaliacao)}</td>
+      <td>${esc(w.Intervalo)}</td>
+      <td>${esc(w.AnoIdeal)}</td>
+      <td>${esc(w.Pais)}</td>
+      <td><span class="badge badge-${tipo}">${esc(w.Tipo)}</span></td>
+    </tr>`;
+  }).join('');
+
+  renderPagination('pagination-tomados', currentPageT, totalPages, p => { currentPageT = p; renderTomados(); });
+}
+
+// ── PAGINATION ──
+function renderPagination(id, cur, total, cb) {
+  const el = document.getElementById(id);
+  if (total <= 1) { el.innerHTML = ''; return; }
+  let html = `<button class="pg-btn" onclick="(${cb})(${cur-1})" ${cur===1?'disabled':''}>‹</button>`;
+  for (let p = 1; p <= total; p++) {
+    if (total > 7 && Math.abs(p - cur) > 2 && p !== 1 && p !== total) {
+      if (p === 2 || p === total-1) html += `<span style="padding:0 4px;color:var(--text-light)">…</span>`;
+      continue;
+    }
+    html += `<button class="pg-btn ${p===cur?'active':''}" onclick="(${cb})(${p})">${p}</button>`;
+  }
+  html += `<button class="pg-btn" onclick="(${cb})(${cur+1})" ${cur===total?'disabled':''}>›</button>`;
+  el.innerHTML = html;
+}
+
+// ── SORT ──
+function sortBy(col) {
+  if (sortCol === col) sortAsc = !sortAsc;
+  else { sortCol = col; sortAsc = true; }
+  currentPage = 1;
+  renderTable();
+}
+
+// ── CRUD ──
+function openModal(idx = null) {
+  editIndex = idx;
+  document.getElementById('modal-title').textContent = idx !== null ? 'Editar vinho' : 'Adicionar vinho';
+  const w = idx !== null ? wines[idx] : {};
+  document.getElementById('f-nome').value = w.Nome || '';
+  document.getElementById('f-safra').value = w.Safra || '';
+  document.getElementById('f-qtd').value = w.Qtd ?? '';
+  document.getElementById('f-aval').value = w.Avaliacao ?? '';
+  document.getElementById('f-pais').value = w.Pais || '';
+  document.getElementById('f-tipo').value = w.Tipo || 'Tinto';
+  const interval = String(w.Intervalo || '').replace('–','-');
+  const parts = interval.split('-');
+  document.getElementById('f-ini').value = parts[0]?.trim() || '';
+  document.getElementById('f-fim').value = parts[1]?.trim() || '';
+  document.getElementById('f-anoideal').value = w.AnoIdeal || '';
+  document.getElementById('modal').classList.add('open');
+}
+
+function editWine(idx) { openModal(idx); }
+
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+
+function saveWine() {
+  const ini = document.getElementById('f-ini').value.trim();
+  const fim = document.getElementById('f-fim').value.trim();
+  const w = {
+    Nome: document.getElementById('f-nome').value.trim(),
+    Safra: document.getElementById('f-safra').value.trim(),
+    Qtd: parseFloat(document.getElementById('f-qtd').value) || 0,
+    Avaliacao: parseFloat(document.getElementById('f-aval').value) || '',
+    Intervalo: ini && fim ? `${ini}–${fim}` : '',
+    AnoIdeal: document.getElementById('f-anoideal').value.trim(),
+    Pais: document.getElementById('f-pais').value.trim(),
+    Tipo: document.getElementById('f-tipo').value,
+  };
+  if (!w.Nome) { alert('Informe o nome do vinho.'); return; }
+
+  if (editIndex !== null) wines[editIndex] = w;
+  else wines.unshift(w);
+
+  closeModal();
+  updateStats(); updateCharts(); updateFilters(); renderTable();
+}
+
+function deleteWine(idx) {
+  if (!confirm(`Excluir "${wines[idx].Nome}"?`)) return;
+  wines.splice(idx, 1);
+  updateStats(); updateCharts(); updateFilters(); renderTable();
+}
+
+function markDrunk(idx) {
+  const w = wines[idx];
+  if (!confirm(`Marcar "${w.Nome}" como tomado?`)) return;
+  const drunk = { ...w };
+  drunk.Qtd = (parseFloat(w.Qtd) || 1) - 1;
+  if (drunk.Qtd <= 0) wines.splice(idx, 1);
+  else wines[idx].Qtd = drunk.Qtd;
+  tomados.unshift({ ...w, Qtd: undefined });
+  updateStats(); updateCharts(); renderTable(); renderTomados();
+}
+
+// ── VIEWS ──
+function switchView(v) {
+  document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById(`view-${v}`).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// ── UTILS ──
+function esc(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── INIT ──
+sheetId = '1fEamU4NHQF0jWDOGrSrGKOxsiKjcxgrXNDRGjDkA0VU';
+document.getElementById('sheet-id-input').value = sheetId;
+loadFromSheet();
+</script>
+</body>
+</html>
